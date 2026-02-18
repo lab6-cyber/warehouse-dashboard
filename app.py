@@ -52,18 +52,19 @@ def aggregate_by_period(data, period):
 
 # Макет дашборда
 app.layout = html.Div([
-    # Заголовок
+    # Заголовок с CSS классом
     html.Div([
         html.H1('Дашборд анализа складских операций'),
         html.P('Интерактивная панель для мониторинга ключевых показателей склада')
-    ], style={'textAlign': 'center', 'backgroundColor': '#ecf0f1', 'padding': '20px'}),
+    ], className='header', style={'textAlign': 'center', 'backgroundColor': '#2c3e50',
+                                  'color': 'white', 'padding': '20px', 'borderRadius': '5px'}),
 
     # Панель управления
     html.Div([
-        html.H3('Панель управления'),
+        html.H3('Панель управления',
+                style={'color': '#2c3e50', 'borderBottom': '2px solid #3498db', 'paddingBottom': '10px'}),
 
-        # Выпадающий список
-        html.Label('Выберите период агрегации:'),
+        html.Label('Выберите период агрегации:', style={'fontWeight': 'bold'}),
         dcc.Dropdown(
             id='period-selector',
             options=[
@@ -77,47 +78,56 @@ app.layout = html.Div([
             style={'width': '300px', 'marginBottom': '20px'}
         ),
 
-        # Загрузчик файлов
-        html.Label('Загрузите свой CSV-файл:'),
+        html.Label('Загрузите свой CSV-файл:', style={'fontWeight': 'bold'}),
         dcc.Upload(
             id='upload-data',
             children=html.Div([
                 'Перетащите файл или ',
-                html.A('выберите файл')
+                html.A('выберите файл', style={'color': '#3498db', 'fontWeight': 'bold'})
             ]),
             style={
                 'width': '100%', 'height': '60px', 'lineHeight': '60px',
-                'borderWidth': '1px', 'borderStyle': 'dashed',
+                'borderWidth': '2px', 'borderStyle': 'dashed',
                 'borderRadius': '5px', 'textAlign': 'center',
-                'marginBottom': '20px', 'backgroundColor': '#f9f9f9'
+                'marginBottom': '20px', 'backgroundColor': '#f9f9f9',
+                'cursor': 'pointer', 'borderColor': '#3498db'
             },
             multiple=False
         )
-    ], style={'padding': '20px'}),
+    ], style={'padding': '20px', 'margin': '10px', 'backgroundColor': 'white',
+              'borderRadius': '5px', 'boxShadow': '0 2px 4px rgba(0,0,0,0.1)'}),
 
     # Первый ряд графиков
     html.Div([
         html.Div([
             dcc.Graph(id='time-series')
-        ], style={'width': '48%', 'display': 'inline-block', 'padding': '10px'}),
+        ], style={'width': '48%', 'display': 'inline-block', 'padding': '10px',
+                  'backgroundColor': 'white', 'borderRadius': '5px',
+                  'boxShadow': '0 2px 4px rgba(0,0,0,0.1)', 'margin': '10px'}),
 
         html.Div([
             dcc.Graph(id='pie-chart')
-        ], style={'width': '48%', 'display': 'inline-block', 'padding': '10px'})
+        ], style={'width': '48%', 'display': 'inline-block', 'padding': '10px',
+                  'backgroundColor': 'white', 'borderRadius': '5px',
+                  'boxShadow': '0 2px 4px rgba(0,0,0,0.1)', 'margin': '10px'})
     ]),
 
     # Второй ряд графиков
     html.Div([
         html.Div([
             dcc.Graph(id='histogram')
-        ], style={'width': '48%', 'display': 'inline-block', 'padding': '10px'}),
+        ], style={'width': '48%', 'display': 'inline-block', 'padding': '10px',
+                  'backgroundColor': 'white', 'borderRadius': '5px',
+                  'boxShadow': '0 2px 4px rgba(0,0,0,0.1)', 'margin': '10px'}),
 
         html.Div([
-            html.H3('Детальные данные'),
+            html.H3('Детальные данные', style={'color': '#2c3e50', 'marginTop': '0'}),
             html.Div(id='data-table')
-        ], style={'width': '48%', 'display': 'inline-block', 'padding': '10px'})
+        ], style={'width': '48%', 'display': 'inline-block', 'padding': '10px',
+                  'backgroundColor': 'white', 'borderRadius': '5px',
+                  'boxShadow': '0 2px 4px rgba(0,0,0,0.1)', 'margin': '10px'})
     ])
-])
+], style={'backgroundColor': '#f8f9fa', 'padding': '20px', 'fontFamily': 'Arial, sans-serif'})
 
 
 # Callback для обновления всех элементов
@@ -146,7 +156,8 @@ def update_dashboard(contents, period):
             except Exception as e:
                 # В случае ошибки показываем сообщение и используем данные по умолчанию
                 return (no_update, no_update, no_update,
-                        html.Div('Ошибка загрузки файла. Проверьте формат CSV.'))
+                        html.Div('Ошибка загрузки файла. Проверьте формат CSV.',
+                                 style={'color': 'red', 'padding': '20px'}))
         else:
             df = df_default
 
@@ -164,10 +175,12 @@ def update_dashboard(contents, period):
         columns=[{'name': i, 'id': i} for i in df.columns],
         page_size=10,
         style_table={'overflowX': 'auto'},
-        style_cell={'textAlign': 'left', 'padding': '5px'},
+        style_cell={'textAlign': 'left', 'padding': '5px', 'fontFamily': 'Arial'},
         style_header={'backgroundColor': '#2c3e50', 'color': 'white', 'fontWeight': 'bold'},
+        style_data={'backgroundColor': 'white'},
         filter_action='native',
-        sort_action='native'
+        sort_action='native',
+        filter_options={'placeholder_text': 'Фильтр...'}
     )
 
     return time_series_fig, pie_chart_fig, histogram_fig, table
