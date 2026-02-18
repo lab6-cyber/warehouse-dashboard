@@ -1,0 +1,20 @@
+# Виртуальное окружение
+venv/
+env/
+.venv/
+
+# Файлы IDE
+.idea/
+*.iml
+.vscode/
+
+# Кэш Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Дистрибутивы
+dist/
+build/
+*.egg-info/
