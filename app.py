@@ -1,6 +1,8 @@
 import pandas as pd
 import plotly.express as px
-from dash import Dash, dcc, html, dash_table
+from dash import Dash, dcc, html, Input, Output, dash_table, no_update
+import base64
+import io
 
 # Загрузка данных по умолчанию
 df_default = pd.read_csv('data/warehouse_data.csv')
@@ -116,6 +118,60 @@ app.layout = html.Div([
         ], style={'width': '48%', 'display': 'inline-block', 'padding': '10px'})
     ])
 ])
+
+
+# Callback для обновления всех элементов
+@app.callback(
+    Output('time-series', 'figure'),
+    Output('pie-chart', 'figure'),
+    Output('histogram', 'figure'),
+    Output('data-table', 'children'),
+    Input('upload-data', 'contents'),
+    Input('period-selector', 'value')
+)
+def update_dashboard(contents, period):
+    # Определяем источник данных
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        df = df_default
+    else:
+        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        if trigger_id == 'upload-data' and contents is not None:
+            # Загружаем пользовательский файл
+            content_type, content_string = contents.split(',')
+            decoded = base64.b64decode(content_string)
+            try:
+                df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+                df['date'] = pd.to_datetime(df['date'])
+            except Exception as e:
+                # В случае ошибки показываем сообщение и используем данные по умолчанию
+                return (no_update, no_update, no_update,
+                        html.Div('Ошибка загрузки файла. Проверьте формат CSV.'))
+        else:
+            df = df_default
+
+    # Агрегация по периоду для линейного графика
+    df_aggregated = aggregate_by_period(df, period)
+
+    # Создание графиков
+    time_series_fig = create_time_series(df_aggregated)
+    pie_chart_fig = create_pie_chart(df)
+    histogram_fig = create_histogram(df)
+
+    # Создание таблицы
+    table = dash_table.DataTable(
+        data=df.head(20).to_dict('records'),
+        columns=[{'name': i, 'id': i} for i in df.columns],
+        page_size=10,
+        style_table={'overflowX': 'auto'},
+        style_cell={'textAlign': 'left', 'padding': '5px'},
+        style_header={'backgroundColor': '#2c3e50', 'color': 'white', 'fontWeight': 'bold'},
+        filter_action='native',
+        sort_action='native'
+    )
+
+    return time_series_fig, pie_chart_fig, histogram_fig, table
+
 
 # Запуск приложения
 if __name__ == '__main__':
